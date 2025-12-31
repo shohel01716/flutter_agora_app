@@ -14,9 +14,9 @@ class TencentScreen extends StatefulWidget {
 class _TencentScreenState extends State<TencentScreen> {
   // Replace with your Tencent App ID and UserSig
   final int sdkAppId = 20032063; // Your SDK App ID
-  final String userId = 'test_user_${DateTime.now().millisecondsSinceEpoch}';
+  final String userId = 'test_user_001'; // Use this exact ID to generate UserSig
   final String roomId = '12345';
-  final String userSig = '6fa64a70a9ac611394629f3fa7ebec64d2fc09aef67238147f880f2682284b52'; // Generate UserSig using SDK Secret Key: 6fa64a70a9ac611394629f3fa7ebec64d2fc09aef67238147f880f2682284b52
+  final String userSig = 'eJwtzF0LgjAYBeD-suvQ163ND*gmKcKkDzIwEETZqpcolpsRRP89Uy-Pcw7nQ7L04LxUQyJCHSCTPqNUD4tn7NkqY8vWqKYE8MaBkbdKa5QkogCMgmCDq7fGRpHI45x3DQxq8f43X-heyEMIxg*8dO-TdSur*rRNsng130u9LNxN4dKsFqxwTRJfU7Z75jSI84VIjjPy-QEqrDNk'; // Generate from: https://console.cloud.tencent.com/trtc
 
   TRTCCloud? _trtcCloud;
   bool _isJoined = false;
@@ -41,8 +41,7 @@ class _TencentScreenState extends State<TencentScreen> {
     // Register event listeners
     _trtcCloud?.registerListener(_onTRTCListener);
 
-    // Enable local video
-    await _trtcCloud?.startLocalPreview(true, TRTCCloudDef.TRTC_VIDEO_STREAM_TYPE_BIG);
+    // Enable local audio first
     await _trtcCloud?.startLocalAudio(TRTCCloudDef.TRTC_AUDIO_QUALITY_DEFAULT);
 
     setState(() {
@@ -54,11 +53,12 @@ class _TencentScreenState extends State<TencentScreen> {
 
   void _onTRTCListener(type, params) {
     debugPrint('TRTC Event: $type, params: $params');
+    debugPrint('Event type class: ${type.runtimeType}');
     
     // Handle different event types based on string keys
-    if (type == 'onEnterRoom') {
+    if (type.toString().contains('onEnterRoom')) {
       if (params > 0) {
-        debugPrint('Enter room success');
+        debugPrint('Enter room success - setting _isJoined = true');
         setState(() {
           _isJoined = true;
         });
@@ -66,30 +66,30 @@ class _TencentScreenState extends State<TencentScreen> {
         debugPrint('Enter room failed: $params');
         _showSnackBar('Failed to join room');
       }
-    } else if (type == 'onExitRoom') {
+    } else if (type.toString().contains('onExitRoom')) {
       debugPrint('Exit room: $params');
       setState(() {
         _isJoined = false;
         _remoteUserId = null;
       });
-    } else if (type == 'onRemoteUserEnterRoom') {
+    } else if (type.toString().contains('onRemoteUserEnterRoom')) {
       debugPrint('Remote user entered: $params');
       setState(() {
         _remoteUserId = params;
       });
-    } else if (type == 'onRemoteUserLeaveRoom') {
+    } else if (type.toString().contains('onRemoteUserLeaveRoom')) {
       debugPrint('Remote user left: $params');
       setState(() {
         _remoteUserId = null;
       });
-    } else if (type == 'onUserVideoAvailable') {
+    } else if (type.toString().contains('onUserVideoAvailable')) {
       debugPrint('User video available: $params');
       if (params is Map && params['available'] == true) {
         setState(() {
           _remoteUserId = params['userId'];
         });
       }
-    } else if (type == 'onError') {
+    } else if (type.toString().contains('onError')) {
       debugPrint('Error: $params');
       if (params is Map) {
         _showSnackBar('Error: ${params['errMsg'] ?? 'Unknown error'}');
@@ -171,24 +171,24 @@ class _TencentScreenState extends State<TencentScreen> {
       ),
       body: Stack(
         children: [
-          // Remote video view
-          if (_isJoined && _remoteUserId != null)
+          // Main video view - show local preview when joined
+          if (_isJoined)
             TRTCCloudVideoView(
               viewType: TRTCCloudDef.TRTC_VideoView_TextureView,
-              onViewCreated: (viewId) {
-                _trtcCloud?.startRemoteView(
-                  _remoteUserId!,
-                  TRTCCloudDef.TRTC_VIDEO_STREAM_TYPE_BIG,
-                  viewId,
-                );
+              onViewCreated: (viewId) async {
+                debugPrint('Main video view created with viewId: $viewId');
+                if (_remoteUserId != null) {
+                  // Show remote user if available
+                  await _trtcCloud?.startRemoteView(
+                    _remoteUserId!,
+                    TRTCCloudDef.TRTC_VIDEO_STREAM_TYPE_BIG,
+                    viewId,
+                  );
+                } else {
+                  // Show local preview in main view
+                  await _trtcCloud?.startLocalPreview(true, viewId);
+                }
               },
-            )
-          else if (_isJoined)
-            const Center(
-              child: Text(
-                'Waiting for remote user to join...',
-                style: TextStyle(fontSize: 16),
-              ),
             )
           else
             const Center(
@@ -222,10 +222,8 @@ class _TencentScreenState extends State<TencentScreen> {
                       : TRTCCloudVideoView(
                           viewType: TRTCCloudDef.TRTC_VideoView_TextureView,
                           onViewCreated: (viewId) async {
-                            await _trtcCloud?.startLocalPreview(
-                              true,
-                              TRTCCloudDef.TRTC_VIDEO_STREAM_TYPE_BIG,
-                            );
+                            debugPrint('Local view created with viewId: $viewId');
+                            await _trtcCloud?.startLocalPreview(true, viewId);
                           },
                         ),
                 ),
