@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'agora_screen.dart';
+import 'agora_conference_screen.dart';
+import 'agora_live_screen.dart';
 import 'tencent_screen.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -25,7 +27,7 @@ class HomeScreen extends StatelessWidget {
           ),
         ),
         child: SafeArea(
-          child: Padding(
+          child: SingleChildScrollView(
             padding: const EdgeInsets.all(24.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -50,6 +52,29 @@ class HomeScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 48),
 
+
+// Agora Live Room Card
+                _PlatformCard(
+                  title: 'Agora Live Room',
+                  description: 'Interactive live streaming with chat and gifts',
+                  icon: Icons.live_tv,
+                  color: Colors.pink,
+                  features: const [
+                    'Host/Audience modes',
+                    'Live chat & reactions',
+                    'Co-host requests',
+                  ],
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const AgoraLiveScreen(),
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 24),
+                
                 // Agora Card
                 _PlatformCard(
                   title: 'Agora RTC',
@@ -72,6 +97,30 @@ class HomeScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 24),
 
+                // Agora Conference Card
+                _PlatformCard(
+                  title: 'Agora Conference',
+                  description: 'Multi-party video conference meetings',
+                  icon: Icons.groups,
+                  color: Colors.deepPurple,
+                  features: const [
+                    'Group video calls',
+                    'Grid view layout',
+                    'Up to 17 participants',
+                  ],
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const AgoraConferenceScreen(),
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 24),
+
+            
+
                 // Tencent Card
                 _PlatformCard(
                   title: 'Tencent RTC',
@@ -92,8 +141,7 @@ class HomeScreen extends StatelessWidget {
                     );
                   },
                 ),
-
-                const Spacer(),
+                const SizedBox(height: 48),
 
                 // Info Card
                 Card(
