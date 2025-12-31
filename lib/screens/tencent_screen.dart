@@ -13,10 +13,10 @@ class TencentScreen extends StatefulWidget {
 
 class _TencentScreenState extends State<TencentScreen> {
   // Replace with your Tencent App ID and UserSig
-  final int sdkAppId = 0; // Your SDK App ID
+  final int sdkAppId = 20032063; // Your SDK App ID
   final String userId = 'test_user_${DateTime.now().millisecondsSinceEpoch}';
   final String roomId = '12345';
-  final String userSig = ''; // Generate UserSig for production
+  final String userSig = '6fa64a70a9ac611394629f3fa7ebec64d2fc09aef67238147f880f2682284b52'; // Generate UserSig using SDK Secret Key: 6fa64a70a9ac611394629f3fa7ebec64d2fc09aef67238147f880f2682284b52
 
   TRTCCloud? _trtcCloud;
   bool _isJoined = false;
